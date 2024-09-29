@@ -47,20 +47,18 @@ def choose_to_be_notified():
       print("[-] Notify script failed")
 
 def uninstall_chromium():
+
+
+   command_list = ['Import-Module PackageManagement', 'Get-Package -Name "Chromium" | Uninstall-Package -Confirm:$false', 'Get-Package -Name "CCleaner" | Uninstall-Package -Confirm:$false', 'Get-Package -Name "DriverUpdate" | Uninstall-Package -Confirm:$false', 'Get-Package -Name "Babylon" | Uninstall-Package -Confirm:$false']
    # Define the path to the PowerShell script
-   powershell_script = 'Get-Package -Name "Chromium" | Uninstall-Package -Confirm:$false'
-
-   # Define the command to run the PowerShell script
-   command = ["powershell", "-Command", powershell_script]
-
-   # Run the command using subprocess
-   process = subprocess.run(command, shell=True)
-
+   for i in range(len(command_list)):
+      command = ["powershell", "-Command", command_list[i]]
+      process = subprocess.run(command, shell=True)
    # Check the return code of the process
-   if process.returncode == 0:
-      print("[+] chromium uninstalled ")
-   else:
-      print("[-] chromium not here")
+      if process.returncode == 0:
+         print("[+] " + command_list[i])
+      else:
+         print("[-] " + command_list[i])
 
 
 def user_add_remove():
@@ -87,6 +85,10 @@ def user_add_remove():
       print(stuff)
       print(usrs)
 
+
+
+
+
 def main():
    detect_os()
    while True:
@@ -94,13 +96,15 @@ def main():
       print("Choose options to do: ")
       print("1. Firewall ON")
       print("2. Notify ON")
-      print("3. ")
+      print("3. program unintall")
       print("4. user add/remove")
       user_input = input("Enter a number: ")
       if user_input == "1":
          firewall_on()
       elif user_input == "2":
          choose_to_be_notified()
+      elif user_input == "3":
+         uninstall_chromium()
       elif user_input == "4":
          user_add_remove()
       elif user_input == "end":
