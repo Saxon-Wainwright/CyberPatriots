@@ -1,12 +1,12 @@
 Authorized Administrators:
 ryuuji (YOU)
-	PW: <blank>
+PAS: <blank>
 yuusaku
-	PW: glasses12
+PAS: glasses12
 minori
-	PW: baseball!
+PAS: baseball!
 taiga
-	PW: palmtoptiger
+PAS: palmtoptiger
 
 Authorized Users:
 inko

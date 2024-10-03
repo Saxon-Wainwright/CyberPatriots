@@ -1,5 +1,4 @@
 import platform
-import distro
 import subprocess
 
 def detect_os():
@@ -10,10 +9,6 @@ def detect_os():
    print(f'OS name: {os_name}')
    print(f'os_release: {os_release}')
    print(f'os_version: {os_version}')
-
-   if distro.like():
-      print(f'Linux Distribution: {distro.name()} {distro.version()}')
-
 def firewall_on():
    # Define the path to the PowerShell script
    powershell_script = "Set-NetFirewallProfile -Profile Domain, Private, Public -Enabled True"
@@ -47,8 +42,6 @@ def choose_to_be_notified():
       print("[-] Notify script failed")
 
 def uninstall_chromium():
-
-
    command_list = ['Import-Module PackageManagement', 'Get-Package -Name "Chromium" | Uninstall-Package -Confirm:$false', 'Get-Package -Name "CCleaner" | Uninstall-Package -Confirm:$false', 'Get-Package -Name "DriverUpdate" | Uninstall-Package -Confirm:$false', 'Get-Package -Name "Babylon" | Uninstall-Package -Confirm:$false']
    # Define the path to the PowerShell script
    for i in range(len(command_list)):
@@ -60,34 +53,88 @@ def uninstall_chromium():
       else:
          print("[-] " + command_list[i])
 
+#removes a false user
+def remove_user(username):
+   command = f"net user {username} /DELETE"
+   subprocess.run(["powershell", "-Command", command], check=True)
+
+#adds people to admin
+def add_new_admin(admin,password):
+   command = f"net user {admin},{password} /ADD"
+   command = f"net localgroup Administrators {admin} /ADD"
+   subprocess.run(["powershell", "-Command", command], check=True)
+
+#adds people to users
+def add_new_user(username):
+   command = f"net user {username} /ADD"
+   subprocess.run(["powershell", "-Command", command], check=True)
 
 def user_add_remove():
-   with open('input.txt', 'r') as file:
+   administrators = []
+   authorized_users = []
+   passwords = []
+   with open("input.txt", "r") as file:
       lines = file.readlines()
-      stuff = {}
-      usrs = []
-      ok = True
-      for i in range(0, len(lines), 1):
-         usr = lines[i].strip()
-         if lines[i].strip() == "Authorized Administrators:":
-            continue
-         elif lines[i].strip() == "Authorized Users:":
-            ok = False
-            continue
-         if ok:
-            if i + 1 < len(lines):
-               pw = lines[i + 1].strip()
-               if pw[0:3] == "PW:":
-                  pass1 = pw.split(":")[1].strip()
-                  stuff[usr] = pass1
+   in_users_section = False
+   for line in lines[1:]:  # skip the first line
+      line = line.strip()
+      if line == "Authorized Users:":
+         in_users_section = True
+         continue
+      if in_users_section:
+         authorized_users.append(line)
+      else:
+         if line.startswith("PAS:"):
+            passwords.append(line[4:])
          else:
-            usrs.append(lines[i].strip())
-      print(stuff)
-      print(usrs)
+            administrators.append(line)
+   print("Authorized Users:", authorized_users)
+   print()
+   print("Authorized Administrators:", administrators)
+   print()
+   print("Passwords:", passwords)
+   # Create a dictionary to map administrators to their passwords
+   admin_passwords = {}
+   for admin, password in zip(administrators, passwords):
+      admin_passwords[admin] = password
+   print("Map of Admins --> passwords:", admin_passwords)
+   #adds all the users
+   for user in authorized_users:
+      add_new_user(user)
+   #adds all the admins and their passwords
+   for admin, password in admin_passwords.items():
+      add_new_admin(admin,password)
+
+
+   command = "powershell -Command Get-LocalUser | Select-Object -ExpandProperty Name"
+   existing_users_output = subprocess.check_output(command, shell=True).decode()
+   existing_users = existing_users_output.split()
+   #removes all non-users
 
 
 
 
+
+def controlPanelStuff():
+   control_panel_commands = {
+      'system': 'control /name Microsoft.System',
+      'programs': 'control /name Microsoft.ProgramsAndFeatures',
+      'network': 'control /name Microsoft.NetworkAndSharingCenter',
+      'display': 'control /name Microsoft.Display',
+      'sound': 'control /name Microsoft.Sound',
+      'user_accounts': 'control /name Microsoft.UserAccounts',
+      'devices': 'control /name Microsoft.DevicesAndPrinters'
+   }
+   try:
+      subprocess.run("control /name Microsoft.SystemAndSecurity", shell = True)
+      print("opened System and Security ")
+      subprocess.run("explorer ms-actioncenter:", shell = True)
+      print("Opened Action Center.")
+      subprocess.run("powershell -Command \"Install-WindowsUpdate -AcceptAll -AutoReboot\"", shell = True)
+      shutil.copytree("C:\\Data", "D:\\Backup")
+      subprocess.run("powershell -Command \"Start-MpScan -ScanType FullScan\"", shell=True)
+   except Exception as e:
+      print(f"failed to open 'system and security'/Action Center: {e}")
 
 def main():
    detect_os()
@@ -109,5 +156,4 @@ def main():
          user_add_remove()
       elif user_input == "end":
          break
-
 main()
