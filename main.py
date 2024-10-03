@@ -1,6 +1,6 @@
 import platform
 import subprocess
-
+import shutil
 def detect_os():
    os_name = platform.system()
    os_release = platform.release()
